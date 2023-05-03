@@ -1,7 +1,6 @@
 streamlit==1.21.0
 streamlit-lottie==0.0.3
 plotly==5.14.1
-tensorboard-plugin-wit==1.6.0
 Pillow==9.4.0
 pandas==1.5.3
 numpy==1.23.5
