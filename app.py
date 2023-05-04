@@ -18,8 +18,8 @@ from streamlit_lottie import st_lottie_spinner
 import streamlit.components.v1 as components
 
 
-MODELSPATH = "/Users/deepakhadkar/Documents/GitHub/Projects/Paid/Skin-cancer-Analyzer-master/models/"
-DATAPATH = "/Users/deepakhadkar/Documents/GitHub/Projects/Paid/Skin-cancer-Analyzer-master/data/"
+MODELSPATH = "/Users/deepakhadkar/Documents/GitHub/Skin-Disease-Analyzer-master/models/"
+DATAPATH = "/Users/deepakhadkar/Documents/GitHub/Skin-Disease-Analyzer-master/data/"
 
 def render_header():
     st.write("""
@@ -123,8 +123,8 @@ def main():
         </div> 
         """
         # display the front end aspect
-        img1 = Image.open("/Users/deepakhadkar/Documents/GitHub/Projects/Paid/Skin-cancer-Analyzer-master/html_images/kjsce_header.jpeg")
-        img2 = Image.open("/Users/deepakhadkar/Documents/GitHub/Projects/Paid/Skin-cancer-Analyzer-master/html_images/names.jpeg")
+        img1 = Image.open("/Users/deepakhadkar/Documents/GitHub/Skin-Disease-Analyzer-master/html_images/kjsce_header.jpeg")
+        img2 = Image.open("/Users/deepakhadkar/Documents/GitHub/Skin-Disease-Analyzer-master/html_images/names.jpeg")
         
         st.image(img1, width=704)
         st.markdown(html_temp, unsafe_allow_html = True) 
@@ -138,7 +138,7 @@ def main():
         <style>
         body {
             background-color: #F5F5F5;
-            background-image: url('/Users/deepakhadkar/Documents/GitHub/Projects/Paid/Skin-cancer-Analyzer-master/html_images/background.jpg');
+            background-image: url('/Users/deepakhadkar/Documents/GitHub/Skin-Disease-Analyzer-master/html_images/background.jpg');
             background-size: cover;
             }
         </style>
