@@ -19,6 +19,10 @@ import streamlit.components.v1 as components
 from pathlib import Path
 import sys
 
+st.set_page_config(
+    page_icon='🤝',
+    page_title='Skin Disease Analyzer')
+
 file_path = Path(__file__).resolve()
 # Get the parent directory of the current file
 root_path = file_path.parent
