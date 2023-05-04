@@ -16,10 +16,22 @@ import requests
 from streamlit_lottie import st_lottie
 from streamlit_lottie import st_lottie_spinner
 import streamlit.components.v1 as components
+from pathlib import Path
 
+    file_path = Path(__file__).resolve()
 
-MODELSPATH = "/Users/deepakhadkar/Documents/GitHub/Skin-Disease-Analyzer-master/models/"
-DATAPATH = "/Users/deepakhadkar/Documents/GitHub/Skin-Disease-Analyzer-master/data/"
+    # Get the parent directory of the current file
+    root_path = file_path.parent
+
+    # Add the root path to the sys.path list if it is not already there
+    if root_path not in sys.path:
+        sys.path.append(str(root_path))
+
+    # Get the relative path of the root directory with respect to the current working directory
+    ROOT = root_path.relative_to(Path.cwd())
+
+MODELSPATH = ROOT + 'models/'
+DATAPATH = ROOT + 'data/'
 
 def render_header():
     st.write("""
@@ -123,8 +135,8 @@ def main():
         </div> 
         """
         # display the front end aspect
-        img1 = Image.open("/Users/deepakhadkar/Documents/GitHub/Skin-Disease-Analyzer/html_images/kjsce_header.jpeg")
-        img2 = Image.open("/Users/deepakhadkar/Documents/GitHub/Skin-Disease-Analyzer/html_images/names.jpeg")
+        img1 = Image.open(ROOT + 'html_images/kjsce_header.jpeg')
+        img2 = Image.open(ROOT + '/html_images/names.jpeg')
         
         st.image(img1, width=704)
         st.markdown(html_temp, unsafe_allow_html = True) 
