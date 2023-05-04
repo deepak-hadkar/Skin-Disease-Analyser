@@ -54,7 +54,7 @@ lottie_predicting_json = load_lottie_url(predicting)
 
 # @st.cache(allow_output_mutation=True)
 def load_mekd():
-    img = Image.open(DATAPATH + '/ISIC_0024312.jpg')
+    img = Image.open(DATAPATH / 'ISIC_0024312.jpg')
     return img
 
 
@@ -84,7 +84,7 @@ def data_gen_(img):
 
 def load_models():
 
-    model = load_model(MODELSPATH + "model.h5")
+    model = load_model(MODELSPATH / "model.h5")
     return model
 
 # @st.cache
