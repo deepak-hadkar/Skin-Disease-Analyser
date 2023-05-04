@@ -3,5 +3,5 @@ tensorflow
 keras
 Plotly
 streamlit_lottie
-PIL
+pillow
 requests
