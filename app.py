@@ -28,8 +28,8 @@ if root_path not in sys.path:
 # Get the relative path of the root directory with respect to the current working directory
 ROOT = root_path.relative_to(Path.cwd())
 
-MODELSPATH = ROOT + 'models/'
-DATAPATH = ROOT + 'data/'
+MODELSPATH = ROOT / 'models/'
+DATAPATH = ROOT / 'data/'
 
 def render_header():
     st.write("""
@@ -133,8 +133,8 @@ def main():
         </div> 
         """
         # display the front end aspect
-        img1 = Image.open(ROOT + 'html_images/kjsce_header.jpeg')
-        img2 = Image.open(ROOT + '/html_images/names.jpeg')
+        img1 = Image.open(ROOT / 'html_images/kjsce_header.jpeg')
+        img2 = Image.open(ROOT / '/html_images/names.jpeg')
         
         st.image(img1, width=704)
         st.markdown(html_temp, unsafe_allow_html = True) 
