@@ -189,7 +189,7 @@ def main():
                         model = load_models()
                         st.success("Hooray !! Keras Model Loaded!")
                         if st.checkbox('Show Prediction Probablity on Sample Image'):
-                            x_test = data_gen(DATAPATH + '/ISIC_0024312.jpg')
+                            x_test = data_gen(DATAPATH / 'ISIC_0024312.jpg')
                             y_new, Y_pred_classes = predict(x_test, model)
                             result = display_prediction(y_new)
                             st.write(result)
