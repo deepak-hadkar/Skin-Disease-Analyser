@@ -1,21 +1,26 @@
 import streamlit as st
+from flask import Flask, request
+import socket
 import numpy as np
 import pandas as pd
-import tensorflow.keras
-from tensorflow.keras.utils import to_categorical
-from tensorflow.keras.models import Sequential, load_model
-from tensorflow.keras import backend as K
-import os
-import time
 import io
+import cv2
+import json
+import base64
+import os
 from PIL import Image
 import plotly.express as px
-from tensorflow import python as tf_python
-import tensorflow.python as tfp 
 import requests
 from streamlit_lottie import st_lottie
 from streamlit_lottie import st_lottie_spinner
 import streamlit.components.v1 as components
+#custom
+from custom.credentials import token, account
+from custom.essentials import stringToRGB, get_model
+from custom.whatsapp import whatsapp_message
+from validation import input_validation
+import re
+from io import StringIO
 
 from pathlib import Path
 import sys
@@ -56,66 +61,52 @@ lottie_animation_1 = "https://assets5.lottiefiles.com/packages/lf20_LmW6VioIWc.j
 predicting = "https://assets5.lottiefiles.com/private_files/lf30_jbhavmow.json"
 
 lottie_anime_json = load_lottie_url(lottie_animation_1)
-lottie_predicting_json = load_lottie_url(predicting)   
+lottie_predicting_json = load_lottie_url(predicting) 
 
-# @st.cache(allow_output_mutation=True)
 def load_mekd():
-    img = Image.open(DATAPATH / 'ISIC_0024312.jpg')
+    img = cv2.imread('data/ISIC_0024312.jpg')
     return img
 
+def disease_detect(result_img, patient_name, patient_contact_number, doctor_name, doctor_contact_number):
+  
+    model_name = 'models/best_model.h5'
+    model = get_model()
+    model.load_weights(model_name)
+    classes = {4: ('nv', ' melanocytic nevi'), 6: ('mel', 'melanoma'), 2 :('bkl', 'benign keratosis-like lesions'), 1:('bcc' , ' basal cell carcinoma'), 5: ('vasc', ' pyogenic granulomas and hemorrhage'), 0: ('akiec', 'Actinic keratoses and intraepithelial carcinomae'),  3: ('df', 'dermatofibroma')}
+    img = cv2.resize(result_img, (28, 28))
+    result = model.predict(img.reshape(1, 28, 28, 3))
+    result = result[0]
+    max_prob = max(result)
 
-# @st.cache
-def data_gen(x):
-    img = np.asarray(Image.open(x).resize((100, 75)))
-    x_test = np.asarray(img.tolist())
-    x_test_mean = np.mean(x_test)
-    x_test_std = np.std(x_test)
-    x_test = (x_test - x_test_mean) / x_test_std
-    x_validate = x_test.reshape(1, 75, 100, 3)
+    if max_prob>0.80:
+        class_ind = list(result).index(max_prob)
+        class_name = classes[class_ind]
+        short_name = class_name[0]
+        full_name = class_name[1]
+        st.warning("""
+            ## **Prediction:** Patient is suffering from
+            """
+            )
+        st.warning(full_name)
 
-    return x_validate
+    else:
+        full_name = 'No Disease' #if confidence is less than 80 percent then "No disease" 
+        st.success(full_name)
+        
+    #whatsapp message
+    message = '''
+    Patient Name: {}
+    Doctor Name: {}
+    Disease Name : {}
+    Confidence: {}
 
-
-# @st.cache
-def data_gen_(img):
-    img = img.reshape(100, 75)
-    x_test = np.asarray(img.tolist())
-    x_test_mean = np.mean(x_test)
-    x_test_std = np.std(x_test)
-    x_test = (x_test - x_test_mean) / x_test_std
-    x_validate = x_test.reshape(1, 75, 100, 3)
-
-    return x_validate
-
-
-def load_models():
-
-    model = load_model(MODELSPATH / "model.h5")
-    return model
-
-# @st.cache
-def predict(x_test, model):
-    Y_pred = model.predict(x_test)
-    ynew = model.predict_proba(x_test)
-    K.clear_session()
-    ynew = np.round(ynew, 2)
-    ynew = ynew*100
-    y_new = ynew[0].tolist()
-    Y_pred_classes = np.argmax(Y_pred, axis=1)
-    K.clear_session()
-    return y_new, Y_pred_classes
-
-# @st.cache
-def display_prediction(y_new):
-    """Display image and preditions from model"""
-
-    result = pd.DataFrame({'Probability': y_new}, index=np.arange(7))
-    result = result.reset_index()
-    result.columns = ['Classes', 'Probability']
-    lesion_type_dict = {2: 'Benign keratosis-like lesions', 4: 'Melanocytic nevi', 3: 'Dermatofibroma',
-                        5: 'Melanoma', 6: 'Vascular lesions', 1: 'Basal cell carcinoma', 0: 'Actinic keratoses'}
-    result["Classes"] = result["Classes"].map(lesion_type_dict)
-    return result
+    '''.format(patient_name, doctor_name, full_name, max_prob)
+    
+    #send whatsapp mesage to patient
+    whatsapp_message(token, account, patient_contact_number, message)
+    # sleep(5)
+    whatsapp_message(token, account, doctor_contact_number, message)
+    return 'Success'
 
 
 def main():
@@ -176,31 +167,37 @@ def main():
             if len(movies_chosen) == 1:
                 if st.checkbox('Show Sample Image'):
                     st.info("Showing Sample Image---->>>")
-                    image = load_mekd()
-                    st.image(image, caption='Sample Image', use_column_width=True)
+                    result_img = load_mekd()
+                    st.image(result_img, caption='Sample Image', use_column_width=True)
                     st.subheader("Choose Training Algorithm!")
                     if st.checkbox('Keras'):
-                        model = load_models()
+                        model = get_model()
+                    
                         st.success("Hooray !! Keras Model Loaded!")
-                        if st.checkbox('Show Prediction Probablity on Sample Image'):
-                            x_test = data_gen(DATAPATH / 'ISIC_0024312.jpg')
-                            y_new, Y_pred_classes = predict(x_test, model)
-                            result = display_prediction(y_new)
-                            st.write(result)
-                            if st.checkbox('Display Probability Graph'):
-                                fig = px.bar(result, x="Classes",
-                                            y="Probability", color='Classes')
-                                st.plotly_chart(fig, use_container_width=True)
+                        if st.checkbox('Enter Doctor & Patients Details'):
+                            with st.form("Details form"):
+                                patient_name = st.text_input("Patient's Name")
+                                patient_contact_number = st.text_input("Patient's Contact Number")
+                                doctor_name = st.text_input("Doctor's Name")
+                                doctor_contact_number = st.text_input("Doctor's Contact Number")
+
+                                if st.form_submit_button("Predict and Send"):
+                                    input_validation(patient_name, patient_contact_number, doctor_name, doctor_contact_number)
+                                    result = disease_detect(result_img, patient_name, patient_contact_number, doctor_name, doctor_contact_number)
+                                    # st.success(result)
+
 
         if page == "Upload Your Skin Image":
 
             st.header("Upload Your Skin Image")
 
-            file_path = st.file_uploader('Upload an image', type=['png', 'jpg'])
+            uploaded_file = st.file_uploader('Upload an image', type=['png', 'jpg'])
 
-            if file_path is not None:
-                x_test = data_gen(file_path)
-                image = Image.open(file_path)
+            if uploaded_file is not None:
+                file_bytes = np.frombuffer(uploaded_file.read(), np.uint8)
+                image = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+                # st.image(image, channels="BGR")
+                # image = cv2.imread(uploaded_file)
                 img_array = np.array(image)
 
                 st.success('File Upload Success!!')
@@ -209,20 +206,24 @@ def main():
 
             if st.checkbox('Show Uploaded Image'):
                 st.info("Showing Uploaded Image ---->>>")
-                st.image(img_array, caption='Uploaded Image',
+                st.image(img_array, channels="BGR", caption='Uploaded Image',
                         use_column_width=True)
                 st.subheader("Choose Training Algorithm!")
                 if st.checkbox('Keras'):
-                    model = load_models()
+                    model = get_model()
                     st.success("Hooray !! Keras Model Loaded!")
-                    if st.checkbox('Show Prediction Probablity for Uploaded Image'):
-                        y_new, Y_pred_classes = predict(x_test, model)
-                        result = display_prediction(y_new)
-                        st.write(result)
-                        if st.checkbox('Display Probability Graph'):
-                            fig = px.bar(result, x="Classes",
-                                        y="Probability", color='Classes')
-                            st.plotly_chart(fig, use_container_width=True)
+                    if st.checkbox('Enter Doctor & Patients Details'):
+                        with st.form("Details form"):
+                            patient_name = st.text_input("Patient's Name")
+                            patient_contact_number = st.text_input("Patient's Contact Number")
+                            doctor_name = st.text_input("Doctor's Name")
+                            doctor_contact_number = st.text_input("Doctor's Contact Number")
+
+                            if st.form_submit_button("Predict and Send"):
+                                input_validation(patient_name, patient_contact_number, doctor_name, doctor_contact_number)
+                                result_img = image
+                                result = disease_detect(result_img, patient_name, patient_contact_number, doctor_name, doctor_contact_number)
+                                st.success(result)
 
 
 if __name__== "__main__":
