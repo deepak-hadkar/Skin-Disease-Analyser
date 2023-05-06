@@ -168,7 +168,7 @@ def main():
                 if st.checkbox('Show Sample Image'):
                     st.info("Showing Sample Image---->>>")
                     result_img = load_mekd()
-                    st.image(result_img, caption='Sample Image', use_column_width=True)
+                    st.image(result_img, caption='Sample Image', channels="BGR", use_column_width=True)
                     st.subheader("Choose Training Algorithm!")
                     if st.checkbox('Keras'):
                         model = get_model()
