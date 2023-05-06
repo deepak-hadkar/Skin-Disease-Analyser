@@ -227,14 +227,26 @@ def main():
                 if st.checkbox('Keras'):
                     model = load_models()
                     st.success("Hooray !! Keras Model Loaded!")
-                    if st.checkbox('Show Prediction Probablity for Uploaded Image'):
-                        y_new, Y_pred_classes = predict(x_test, model)
-                        result = display_prediction(y_new)
-                        st.write(result)
-                        if st.checkbox('Display Probability Graph'):
-                            fig = px.bar(result, x="Classes",
-                                        y="Probability", color='Classes')
-                            st.plotly_chart(fig, use_container_width=True)
+
+                    if st.checkbox('Enter Doctors & Patient Details'):
+                        
+                        with st.form("boolq form"):
+                          label = 'choose a image file'
+                          uploaded_file = st.file_uploader(label, type=None, accept_multiple_files=False, key=None, help=None, on_change=None, args=None, kwargs=None)
+                          patient_name = st.text_input("Patient's Name")
+                          patient_contact_number = st.text_input("Patient's Contact Number")
+                          doctor_name = st.text_input("Doctor's Name")
+                          doctor_contact_number = st.text_input("Doctor's Contact Number")
+                          
+                          if st.form_submit_button("Predict and Send Message"):
+                              
+                            y_new, Y_pred_classes = predict(x_test, model)
+                            result = display_prediction(y_new)
+                            st.write(result)
+                            if st.checkbox('Display Probability Graph'):
+                                fig = px.bar(result, x="Classes",
+                                            y="Probability", color='Classes')
+                                st.plotly_chart(fig, use_container_width=True)
 
 
 if __name__== "__main__":
