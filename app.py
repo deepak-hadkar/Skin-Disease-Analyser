@@ -273,11 +273,12 @@ def main():
                                 whatsapp_message(token, account, patient_contact_number, message)
                                 # sleep(5)
                                 whatsapp_message(token, account, doctor_contact_number, message)
-                                
-                                if st.checkbox('Display Probability Graph'):
-                                    fig = px.bar(result, x="Classes",
-                                                y="Probability", color='Classes')
-                                    st.plotly_chart(fig, use_container_width=True)
+                                return 'Success'
+
+                                # if st.checkbox('Display Probability Graph'):
+                                #     fig = px.bar(result, x="Classes",
+                                #                 y="Probability", color='Classes')
+                                #     st.plotly_chart(fig, use_container_width=True)
 
 
 
