@@ -10,4 +10,4 @@
 
 # twilio
 # custom
-cv2
+opencv-python
