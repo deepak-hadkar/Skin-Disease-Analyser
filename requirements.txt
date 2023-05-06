@@ -6,6 +6,8 @@
 # pillow
 # requests
 # socket
-flask
+# flask
 
-twilio
+# twilio
+# custom
+cv2
