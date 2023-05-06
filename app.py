@@ -1,3 +1,6 @@
+
+from flask import Flask, request
+import socket
 import streamlit as st
 import numpy as np
 import pandas as pd
@@ -18,6 +21,9 @@ from streamlit_lottie import st_lottie_spinner
 import streamlit.components.v1 as components
 from pathlib import Path
 import sys
+#custom
+from custom.credentials import token, account
+from custom.whatsapp import whatsapp_message
 
 st.set_page_config(
     page_icon='🤝',
@@ -231,22 +237,48 @@ def main():
                     if st.checkbox('Enter Doctors & Patient Details'):
                         
                         with st.form("boolq form"):
-                          label = 'choose a image file'
-                          uploaded_file = st.file_uploader(label, type=None, accept_multiple_files=False, key=None, help=None, on_change=None, args=None, kwargs=None)
-                          patient_name = st.text_input("Patient's Name")
-                          patient_contact_number = st.text_input("Patient's Contact Number")
-                          doctor_name = st.text_input("Doctor's Name")
-                          doctor_contact_number = st.text_input("Doctor's Contact Number")
+                            patient_name = st.text_input("Patient's Name")
+                            patient_contact_number = st.text_input("Patient's Contact Number")
+                            doctor_name = st.text_input("Doctor's Name")
+                            doctor_contact_number = st.text_input("Doctor's Contact Number")
                           
-                          if st.form_submit_button("Predict and Send Message"):
-                              
-                            y_new, Y_pred_classes = predict(x_test, model)
-                            result = display_prediction(y_new)
-                            st.write(result)
-                            if st.checkbox('Display Probability Graph'):
-                                fig = px.bar(result, x="Classes",
-                                            y="Probability", color='Classes')
-                                st.plotly_chart(fig, use_container_width=True)
+                            if st.form_submit_button("Predict and Send Message"):
+
+                                #whatsapp message
+                                message = '''
+                                Patient Name: {}
+                                Doctor Name: {}
+                                Disease Name : {}
+                                Confidence: {}
+
+                                '''.format(patient_name, doctor_name, full_name, max_prob)
+                                
+                                #send whatsapp mesage to patient
+                                whatsapp_message(token, account, patient_contact_number, message)
+                                # sleep(5)
+                                whatsapp_message(token, account, doctor_contact_number, message)
+                                
+                                y_new, Y_pred_classes = predict(x_test, model)
+                                result = display_prediction(y_new)
+                                st.write(result)
+
+                                result = result[0]
+                                max_prob = max(result)
+                                classes = {4: ('nv', ' melanocytic nevi'), 6: ('mel', 'melanoma'), 2 :('bkl', 'benign keratosis-like lesions'), 1:('bcc' , ' basal cell carcinoma'), 5: ('vasc', ' pyogenic granulomas and hemorrhage'), 0: ('akiec', 'Actinic keratoses and intraepithelial carcinomae'),  3: ('df', 'dermatofibroma')}
+  
+                                if max_prob>0.80:
+                                    class_ind = list(result).index(max_prob)
+                                    class_name = classes[class_ind]
+                                    # short_name = class_name[0]
+                                    full_name = class_name[1]
+                                else:
+                                    full_name = 'No Disease' #if confidence is less than 80 percent then "No disease" 
+                                
+                                if st.checkbox('Display Probability Graph'):
+                                    fig = px.bar(result, x="Classes",
+                                                y="Probability", color='Classes')
+                                    st.plotly_chart(fig, use_container_width=True)
+
 
 
 if __name__== "__main__":
