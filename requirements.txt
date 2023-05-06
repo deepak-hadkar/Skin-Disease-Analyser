@@ -5,3 +5,6 @@ Plotly
 streamlit_lottie
 pillow
 requests
+flask
+socket
+twilio
