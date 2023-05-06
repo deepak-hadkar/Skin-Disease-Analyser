@@ -5,7 +5,7 @@
 # streamlit_lottie
 # pillow
 # requests
-socket
+# socket
 flask
 
 twilio
