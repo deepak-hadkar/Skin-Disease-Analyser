@@ -88,7 +88,7 @@ def disease_detect(result_img, patient_name, patient_contact_number, doctor_name
 
     else:
         full_name = 'No Disease' #if confidence is less than 80 percent then "No disease" 
-        st.success(full_name)
+        st.success('**Prediction:** Patients Skin is Healthy, No Disease detected')
         
     #whatsapp message
     message = '''
