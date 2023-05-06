@@ -84,10 +84,9 @@ def disease_detect(result_img, patient_name, patient_contact_number, doctor_name
         short_name = class_name[0]
         full_name = class_name[1]
         st.warning("""
-            ## **Prediction:** Patient is suffering from
+            ## **Prediction:** Patient is suffering from 
             """
-            )
-        st.warning(full_name)
+            , full_name)
 
     else:
         full_name = 'No Disease' #if confidence is less than 80 percent then "No disease" 
