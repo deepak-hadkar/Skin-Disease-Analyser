@@ -139,8 +139,8 @@ def main():
         </div> 
         """
         # display the front end aspect
-        img1 = Image.open("/Users/deepakhadkar/Documents/GitHub/Skin-Disease-Analyser/html_images/kjsce_header.jpeg")
-        img2 = Image.open("/Users/deepakhadkar/Documents/GitHub/Skin-Disease-Analyser/html_images/names.jpeg")
+        img1 = Image.open(ROOT / 'html_images/kjsce_header.jpeg')
+        img2 = Image.open(ROOT / 'html_images/names.jpeg')
         
         st.image(img1, width=704)
         st.markdown(html_temp, unsafe_allow_html = True) 
@@ -148,18 +148,6 @@ def main():
         st.image(img2, width=704)
 
     elif choice == "App":
-
-        # Set the background color and image
-        html_background = """
-        <style>
-        body {
-            background-color: #F5F5F5;
-            background-image: url('/Users/deepakhadkar/Documents/GitHub/Skin-Disease-Analyser/html_images/background.jpg');
-            background-size: cover;
-            }
-        </style>
-        """
-        st.markdown(html_background, unsafe_allow_html=True)
 
         st_lottie(lottie_predicting_json, speed=1, width=200, height=200, key = "hello")
 
