@@ -22,8 +22,8 @@ import streamlit.components.v1 as components
 from pathlib import Path
 import sys
 #custom
-from custom.credentials import token, account
-from custom.whatsapp import whatsapp_message
+from credentials import token, account
+from whatsapp import whatsapp_message
 
 st.set_page_config(
     page_icon='🤝',
