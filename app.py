@@ -11,6 +11,7 @@ from tensorflow.keras import backend as K
 import os
 import time
 import io
+import cv2
 from PIL import Image
 import plotly.express as px
 from tensorflow import python as tf_python
@@ -24,6 +25,8 @@ import sys
 #custom
 from credentials import token, account
 from whatsapp import whatsapp_message
+from essentials import stringToRGB, get_model
+from validation import input_validation
 
 st.set_page_config(
     page_icon='🤝',
@@ -94,34 +97,70 @@ def data_gen_(img):
 
 def load_models():
 
-    model = load_model(MODELSPATH / "model.h5")
+    model = load_model(MODELSPATH / "best_model.h5")
     return model
 
-# @st.cache
-def predict(x_test, model):
-    Y_pred = model.predict(x_test)
-    ynew = model.predict(x_test)
-    ynew = np.round(ynew, 2)
-    ynew = ynew*100
-    K.clear_session()
-    ynew = np.round(ynew, 2)
-    ynew = ynew*100
-    y_new = ynew[0].tolist()
-    Y_pred_classes = np.argmax(Y_pred, axis=1)
-    K.clear_session()
-    return y_new, Y_pred_classes
+def disease_detect(result_img, patient_name, patient_contact_number, doctor_name, doctor_contact_number):
+  
+  model_name = 'Model/best_model.h5'
+  model = get_model()
+  model.load_weights(model_name)
+  classes = {4: ('nv', ' melanocytic nevi'), 6: ('mel', 'melanoma'), 2 :('bkl', 'benign keratosis-like lesions'), 1:('bcc' , ' basal cell carcinoma'), 5: ('vasc', ' pyogenic granulomas and hemorrhage'), 0: ('akiec', 'Actinic keratoses and intraepithelial carcinomae'),  3: ('df', 'dermatofibroma')}
+  img = cv2.resize(result_img, (28, 28))
+  result = model.predict(img.reshape(1, 28, 28, 3))
+  result = result[0]
+  max_prob = max(result)
+  
+  
+  if max_prob>0.80:
+    class_ind = list(result).index(max_prob)
+    class_name = classes[class_ind]
+    # short_name = class_name[0]
+    full_name = class_name[1]
+  else:
+    full_name = 'No Disease' #if confidence is less than 80 percent then "No disease" 
+  
+
+  #whatsapp message
+  message = '''
+  Patient Name: {}
+  Doctor Name: {}
+  Disease Name : {}
+  Confidence: {}
+
+  '''.format(patient_name, doctor_name, full_name, max_prob)
+  
+  #send whatsapp mesage to patient
+  whatsapp_message(token, account, patient_contact_number, message)
+  # sleep(5)
+  whatsapp_message(token, account, doctor_contact_number, message)
+  return 'Success'
 
 # @st.cache
-def display_prediction(y_new):
-    """Display image and preditions from model"""
+# def predict(x_test, model):
+#     Y_pred = model.predict(x_test)
+#     ynew = model.predict(x_test)
+#     ynew = np.round(ynew, 2)
+#     ynew = ynew*100
+#     K.clear_session()
+#     ynew = np.round(ynew, 2)
+#     ynew = ynew*100
+#     y_new = ynew[0].tolist()
+#     Y_pred_classes = np.argmax(Y_pred, axis=1)
+#     K.clear_session()
+#     return y_new, Y_pred_classes
 
-    result = pd.DataFrame({'Probability': y_new}, index=np.arange(7))
-    result = result.reset_index()
-    result.columns = ['Classes', 'Probability']
-    lesion_type_dict = {2: 'Benign keratosis-like lesions', 4: 'Melanocytic nevi', 3: 'Dermatofibroma',
-                        5: 'Melanoma', 6: 'Vascular lesions', 1: 'Basal cell carcinoma', 0: 'Actinic keratoses'}
-    result["Classes"] = result["Classes"].map(lesion_type_dict)
-    return result
+# @st.cache
+# def display_prediction(y_new):
+#     """Display image and preditions from model"""
+
+#     result = pd.DataFrame({'Probability': y_new}, index=np.arange(7))
+#     result = result.reset_index()
+#     result.columns = ['Classes', 'Probability']
+#     lesion_type_dict = {2: 'Benign keratosis-like lesions', 4: 'Melanocytic nevi', 3: 'Dermatofibroma',
+#                         5: 'Melanoma', 6: 'Vascular lesions', 1: 'Basal cell carcinoma', 0: 'Actinic keratoses'}
+#     result["Classes"] = result["Classes"].map(lesion_type_dict)
+#     return result
 
 
 def main():
@@ -197,37 +236,47 @@ def main():
                     image = load_mekd()
                     st.image(image, caption='Sample Image', use_column_width=True)
                     st.subheader("Choose Training Algorithm!")
+                    
                     if st.checkbox('Keras'):
                         model = load_models()
                         st.success("Hooray !! Keras Model Loaded!")
-                        if st.checkbox('Show Prediction Probablity on Sample Image'):
-                            x_test = data_gen(DATAPATH / 'ISIC_0024312.jpg')
-                            y_new, Y_pred_classes = predict(x_test, model)
-                            result = display_prediction(y_new)
-                            st.write(result)
-                            if st.checkbox('Display Probability Graph'):
-                                fig = px.bar(result, x="Classes",
-                                            y="Probability", color='Classes')
-                                st.plotly_chart(fig, use_container_width=True)
+
+                        if st.checkbox('Enter Doctors & Patient Details'):
+                            
+                            with st.form("boolq form"):
+                                patient_name = st.text_input("Patient's Name")
+                                patient_contact_number = st.text_input("Patient's Contact Number")
+                                doctor_name = st.text_input("Doctor's Name")
+                                doctor_contact_number = st.text_input("Doctor's Contact Number")
+                                
+                                if st.form_submit_button("Predict and Send Message"):
+                                    input_validation(uploaded_file, patient_name, patient_contact_number, doctor_name, doctor_contact_number)
+                                    result = disease_detect(result_img, patient_name, patient_contact_number, doctor_name, doctor_contact_number)
+                                    st.success(result)
 
         if page == "Upload Your Skin Image":
 
             st.header("Upload Your Skin Image")
 
-            file_path = st.file_uploader('Upload an image', type=['png', 'jpg'])
-
-            if file_path is not None:
-                x_test = data_gen(file_path)
-                image = Image.open(file_path)
-                img_array = np.array(image)
+            uploaded_file = st.file_uploader(label, type=None, accept_multiple_files=False, key=None, help=None, on_change=None, args=None, kwargs=None)
+            file_name = uploaded_file.name
+            file_extension = os.path.splitext(file_name)[1]
+            
+            if file_extension in ['.jpg', '.jpeg', '.png']:
+                bytes_data = uploaded_file.getvalue()
+        
+                with open(f'test_images/temp.{file_extension}', 'wb') as f:
+                    f.write(bytes_data)
+                result_img = cv2.imread(f'test_images/temp.{file_extension}')
 
                 st.success('File Upload Success!!')
             else:
-                st.info('Please upload Image file')
+                st.error('File must be one of .png, .jpg or .jpeg')
+                st.stop()
 
             if st.checkbox('Show Uploaded Image'):
                 st.info("Showing Uploaded Image ---->>>")
-                st.image(img_array, caption='Uploaded Image',
+                st.image(result_img, caption='Uploaded Image',
                         use_column_width=True)
                 st.subheader("Choose Training Algorithm!")
                 if st.checkbox('Keras'):
@@ -243,42 +292,10 @@ def main():
                             doctor_contact_number = st.text_input("Doctor's Contact Number")
                           
                             if st.form_submit_button("Predict and Send Message"):
- 
-                                y_new, Y_pred_classes = predict(x_test, model)
-                                result = display_prediction(y_new)
-                                st.write(result)
+                                input_validation(uploaded_file, patient_name, patient_contact_number, doctor_name, doctor_contact_number)
+                                result = disease_detect(result_img, patient_name, patient_contact_number, doctor_name, doctor_contact_number)
+                                st.success(result)
 
-                                result = result[0]
-                                max_prob = max(result)
-                                classes = {4: ('nv', ' melanocytic nevi'), 6: ('mel', 'melanoma'), 2 :('bkl', 'benign keratosis-like lesions'), 1:('bcc' , ' basal cell carcinoma'), 5: ('vasc', ' pyogenic granulomas and hemorrhage'), 0: ('akiec', 'Actinic keratoses and intraepithelial carcinomae'),  3: ('df', 'dermatofibroma')}
-  
-                                if max_prob>0.80:
-                                    class_ind = list(result).index(max_prob)
-                                    class_name = classes[class_ind]
-                                    # short_name = class_name[0]
-                                    full_name = class_name[1]
-                                else:
-                                    full_name = 'No Disease' #if confidence is less than 80 percent then "No disease" 
-                                
-                                                                #whatsapp message
-                                message = '''
-                                Patient Name: {}
-                                Doctor Name: {}
-                                Disease Name : {}
-                                Confidence: {}
-
-                                '''.format(patient_name, doctor_name, full_name, max_prob)
-                                
-                                #send whatsapp mesage to patient
-                                whatsapp_message(token, account, patient_contact_number, message)
-                                # sleep(5)
-                                whatsapp_message(token, account, doctor_contact_number, message)
-                                return 'Success'
-
-                                # if st.checkbox('Display Probability Graph'):
-                                #     fig = px.bar(result, x="Classes",
-                                #                 y="Probability", color='Classes')
-                                #     st.plotly_chart(fig, use_container_width=True)
 
 
 
