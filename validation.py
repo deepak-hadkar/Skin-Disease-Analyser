@@ -1,5 +1,6 @@
 import re
 import streamlit as st
+
 def input_validation(uploaded_file, patient_name, patient_contact_number, doctor_name, doctor_contact_number):
   #validate the inputs
   if not uploaded_file:
