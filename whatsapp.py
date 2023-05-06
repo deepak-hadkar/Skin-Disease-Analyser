@@ -1,6 +1,6 @@
 import os
 from twilio.rest import Client
-from custom.credentials import token, account
+from credentials import token, account
 
 
 def whatsapp_message(token, account, to_number, message):
