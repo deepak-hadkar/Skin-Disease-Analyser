@@ -243,21 +243,7 @@ def main():
                             doctor_contact_number = st.text_input("Doctor's Contact Number")
                           
                             if st.form_submit_button("Predict and Send Message"):
-
-                                #whatsapp message
-                                message = '''
-                                Patient Name: {}
-                                Doctor Name: {}
-                                Disease Name : {}
-                                Confidence: {}
-
-                                '''.format(patient_name, doctor_name, full_name, max_prob)
-                                
-                                #send whatsapp mesage to patient
-                                whatsapp_message(token, account, patient_contact_number, message)
-                                # sleep(5)
-                                whatsapp_message(token, account, doctor_contact_number, message)
-                                
+ 
                                 y_new, Y_pred_classes = predict(x_test, model)
                                 result = display_prediction(y_new)
                                 st.write(result)
@@ -273,6 +259,20 @@ def main():
                                     full_name = class_name[1]
                                 else:
                                     full_name = 'No Disease' #if confidence is less than 80 percent then "No disease" 
+                                
+                                                                #whatsapp message
+                                message = '''
+                                Patient Name: {}
+                                Doctor Name: {}
+                                Disease Name : {}
+                                Confidence: {}
+
+                                '''.format(patient_name, doctor_name, full_name, max_prob)
+                                
+                                #send whatsapp mesage to patient
+                                whatsapp_message(token, account, patient_contact_number, message)
+                                # sleep(5)
+                                whatsapp_message(token, account, doctor_contact_number, message)
                                 
                                 if st.checkbox('Display Probability Graph'):
                                     fig = px.bar(result, x="Classes",
