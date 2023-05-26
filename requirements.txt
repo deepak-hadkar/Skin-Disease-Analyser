@@ -1,14 +1,14 @@
-# streamlit
-# tensorflow
-# keras
-# Plotly
-# streamlit_lottie
-# pillow
-# requests
-# socket
+streamlit
+tensorflow
+keras
+Plotly
+streamlit_lottie
+pillow
+requests
+socket
 flask
 
-# twilio
-# custom
-# libclang==13.0.0
-# opencv-python
+twilio
+custom
+libclang==13.0.0
+opencv-python
